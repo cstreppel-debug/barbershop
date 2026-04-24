@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { formatPrice, formatDuration } from "@/lib/utils";
 import type { Service, Barber, Appointment } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Afspraak bevestigd",
   description: "Je afspraak bij Kapper De Zaak is bevestigd.",

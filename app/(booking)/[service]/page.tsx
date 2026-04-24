@@ -8,6 +8,8 @@ import { BarberCard, NoPreferenceButton } from "@/components/booking/BarberCard"
 import { formatPrice, formatDuration } from "@/lib/utils";
 import type { Barber } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({
   params,
 }: {

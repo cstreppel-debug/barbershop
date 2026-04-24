@@ -6,27 +6,15 @@ import { createClient } from "@/lib/supabase/server";
 import { StepIndicator } from "@/components/booking/StepIndicator";
 import { DateTimePicker } from "@/components/booking/DateTimePicker";
 import { formatDuration, formatPrice } from "@/lib/utils";
-import type { Barber, Service, OpeningHours } from "@/lib/types";
+import type { Barber, Service } from "@/lib/types";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ service: string; barber: string }>;
-}): Promise<Metadata> {
-  const { service: serviceId, barber: barberId } = await params;
-  const supabase = await createClient();
-  const [{ data: service }, { data: barber }] = await Promise.all([
-    supabase.from("services").select("name").eq("id", serviceId).single(),
-    supabase.from("barbers").select("name").eq("id", barberId).single(),
-  ]);
+// This page reads cookies (Supabase auth) and live DB data — never statically render it.
+export const dynamic = "force-dynamic";
 
-  const title =
-    service && barber
-      ? `${service.name} bij ${barber.name} — kies datum & tijd`
-      : "Kies datum & tijd";
-
-  return { title };
-}
+export const metadata: Metadata = {
+  title: "Kies datum & tijd",
+  description: "Kies een datum en tijdstip voor je afspraak bij Kapper De Zaak.",
+};
 
 export default async function ChooseDateTimePage({
   params,

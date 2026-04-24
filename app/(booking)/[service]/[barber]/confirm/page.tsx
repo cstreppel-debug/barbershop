@@ -8,6 +8,8 @@ import { BookingForm } from "@/components/booking/BookingForm";
 import { formatDuration, formatPrice } from "@/lib/utils";
 import type { Service, Barber } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Bevestig je afspraak",
   description: "Controleer de details en bevestig je boeking bij Kapper De Zaak.",
