@@ -2,7 +2,8 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { CheckCircle, AlertCircle, Loader2 } from "lucide-react";
-import { saveHours, DAY_NAMES, DAY_ORDER, type HoursActionState } from "@/actions/hours";
+import { saveHours, type HoursActionState } from "@/actions/hours";
+import { DAY_NAMES, DAY_ORDER } from "@/lib/hours-config";
 import { cn } from "@/lib/utils";
 import type { OpeningHours } from "@/lib/types";
 
