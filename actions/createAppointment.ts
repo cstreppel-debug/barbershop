@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { randomUUID } from "crypto";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { sendConfirmationEmail } from "./sendConfirmationEmail";
@@ -60,6 +61,11 @@ export async function createAppointment(
     .single();
 
   if (serviceError || !service) {
+    console.error("[createAppointment] Service lookup failed:", {
+      service_id,
+      code:    serviceError?.code,
+      message: serviceError?.message,
+    });
     return { serverError: "Behandeling kon niet worden opgehaald. Probeer opnieuw." };
   }
 
@@ -67,11 +73,15 @@ export async function createAppointment(
   const startsAt = new Date(`${date}T${time}:00.000Z`);
   const endsAt = new Date(startsAt.getTime() + service.duration_min * 60_000);
 
-  // 4. Schrijf appointment — redirect() buiten try/catch zodat Next.js het
-  //    NEXT_REDIRECT kan gooien zonder dat catch het abseert.
-  const { data: appointment, error: insertError } = await supabase
+  // 4. Pre-genereer de UUID zodat we de afspraak niet hoeven terug te lezen
+  //    (Supabase vereist SELECT-rechten voor .select() na .insert(), maar
+  //    anonieme gebruikers hebben geen SELECT-policy op appointments).
+  const appointmentId = randomUUID();
+
+  const { error: insertError } = await supabase
     .from("appointments")
     .insert({
+      id: appointmentId,
       service_id,
       barber_id,
       customer_name,
@@ -81,16 +91,25 @@ export async function createAppointment(
       starts_at: startsAt.toISOString(),
       ends_at: endsAt.toISOString(),
       status: "pending",
-    })
-    .select("id")
-    .single();
+    });
 
-  if (insertError || !appointment) {
+  if (insertError) {
+    console.error("[createAppointment] Supabase insert failed:", {
+      code:    insertError.code,
+      message: insertError.message,
+      details: insertError.details,
+      hint:    insertError.hint,
+    });
     return {
       serverError:
-        "Er is iets misgegaan bij het opslaan van je afspraak. Probeer het opnieuw.",
+        process.env.NODE_ENV === "development"
+          ? `Supabase fout (${insertError.code}): ${insertError.message}${insertError.hint ? ` — ${insertError.hint}` : ""}`
+          : "Er is iets misgegaan bij het opslaan van je afspraak. Probeer het opnieuw.",
     };
   }
+
+  // Gebruik de pre-gegenereerde ID als bevestiging dat insert gelukt is
+  const appointment = { id: appointmentId };
 
   // 5. Haal barbernaam op voor de e-mail
   const { data: barber } = await supabase
